@@ -254,7 +254,6 @@ resource "azurerm_virtual_network_gateway" "primaryERGW" {
 resource "azurerm_route_server" "primaryARS" {
   provider = azurerm.subscription_id_connectivity1
   depends_on = [
-    module.primaryHubVnet,
     azurerm_virtual_network_gateway.primaryVpnGW,
     azurerm_public_ip.primaryARS_pip01
   ]
@@ -269,6 +268,10 @@ resource "azurerm_route_server" "primaryARS" {
 
 # set to conditional if asn and ip != null
 resource "azurerm_route_server_bgp_connection" "primaryARS_bgpconnection01" {
+  provider = azurerm.subscription_id_connectivity1
+  depends_on = [
+    azurerm_route_server.primaryARS
+  ]
   name            = "primary-hub-ARS-bgpconnection-01"
   route_server_id = azurerm_route_server.primaryARS.id
   peer_asn        = 65050
