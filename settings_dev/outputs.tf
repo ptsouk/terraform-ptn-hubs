@@ -12,16 +12,19 @@ output "default" {
   }
 }
 
-output default_tags {
+output "default_tags" {
   description = "Default tags."
-  value = local.default_tags
+  value       = local.default_tags
 }
 
 output "HubVnets" {
   description = "Configuration settings for the network resources deployment."
   value = {
-    primaryHubVnet   = local.primaryHubVnet
-    secondaryHubVnet = local.secondaryHubVnet
+    primaryHubVnet             = local.primaryHubVnet
+    secondaryHubVnet           = local.secondaryHubVnet
+    primaryHubNetworkResources = local.primaryHubNetworkResources
+    hub1TOhub2_peering         = local.hub1TOhub2_peering
+    hub2TOhub1_peering         = local.hub2TOhub1_peering
   }
 }
 
