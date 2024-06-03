@@ -2,6 +2,8 @@
 
 Enterprise Scale LZ Connectivity Hubs Example
 
+[Azure Route Server support for ExpressRoute and Azure VPN](https://learn.microsoft.com/en-us/azure/route-server/expressroute-vpn-support)
+
 ## AZ CLI
 
 ```bash
