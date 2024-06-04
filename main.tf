@@ -53,6 +53,45 @@ module "nsg02" {
   tags                = module.settings.default_tags
 }
 
+resource "azurerm_route_table" "udr01" {
+  provider = azurerm.subscription_id_connectivity1
+  depends_on = [
+    azurerm_resource_group.primaryHubResourceGroup
+  ]
+  resource_group_name           = azurerm_resource_group.primaryHubResourceGroup.name
+  name                          = module.settings.UDRs.udr_names.udr01_name
+  location                      = module.settings.default.primary_location
+  disable_bgp_route_propagation = false
+  tags = module.settings.default_tags
+}
+
+resource "azurerm_route" "udr01Route01" {
+  provider = azurerm.subscription_id_connectivity1
+  depends_on = [
+    azurerm_resource_group.primaryHubResourceGroup,
+    azurerm_route_table.udr01
+  ]
+  name                = module.settings.UDRs.routes.udr01Routes.udr01Route01.name
+  resource_group_name = azurerm_resource_group.primaryHubResourceGroup.name
+  route_table_name    = module.settings.UDRs.udr_names.udr01_name
+  address_prefix      = module.settings.UDRs.routes.udr01Routes.udr01Route01.address_prefix
+  next_hop_type       = module.settings.UDRs.routes.udr01Routes.udr01Route01.next_hop_type
+}
+
+resource "azurerm_route" "udr01Route02" {
+  provider = azurerm.subscription_id_connectivity1
+  depends_on = [
+    azurerm_resource_group.primaryHubResourceGroup,
+    azurerm_route_table.udr01
+  ]
+  name                   = module.settings.UDRs.routes.udr01Routes.udr01Route02.name
+  resource_group_name    = azurerm_resource_group.primaryHubResourceGroup.name
+  route_table_name       = module.settings.UDRs.udr_names.udr01_name
+  address_prefix         = module.settings.UDRs.routes.udr01Routes.udr01Route02.address_prefix
+  next_hop_type          = module.settings.UDRs.routes.udr01Routes.udr01Route02.next_hop_type
+  next_hop_in_ip_address = module.settings.UDRs.routes.udr01Routes.udr01Route02.next_hop_in_ip_address
+}
+
 # deploy hub 1
 module "primaryHubVnet" {
   providers = {
@@ -60,7 +99,8 @@ module "primaryHubVnet" {
   }
   depends_on = [
     azurerm_resource_group.primaryHubResourceGroup,
-    module.nsg01
+    module.nsg01,
+    azurerm_route_table.udr01
   ]
   source              = "Azure/avm-res-network-virtualnetwork/azurerm"
   version             = "0.1.4"

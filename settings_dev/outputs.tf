@@ -35,3 +35,11 @@ output "NSGRules" {
     nsg_rules = local.nsg_rules
   }
 }
+
+output "UDRs" {
+  description = "Configuration settings for the network resources deployment."
+  value = {
+    udr_names = local.udr_names
+    routes    = local.routes
+  }
+}

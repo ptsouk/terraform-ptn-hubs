@@ -15,6 +15,9 @@ locals {
         network_security_group = {
           id = "/subscriptions/${local.subscription_id_connectivity1}/resourceGroups/${local.primaryHubResourceGroup_name}/providers/Microsoft.Network/networkSecurityGroups/${local.nsg_names.nsg01_name}"
         }
+        route_table = {
+          id = "/subscriptions/${local.subscription_id_connectivity1}/resourceGroups/${local.primaryHubResourceGroup_name}/providers/Microsoft.Network/routeTables/${local.udr_names.udr01_name}"
+        }
         private_endpoint_network_policies_enabled     = true
         private_link_service_network_policies_enabled = true
       },
