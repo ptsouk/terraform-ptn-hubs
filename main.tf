@@ -100,7 +100,8 @@ module "primaryHubVnet" {
   depends_on = [
     azurerm_resource_group.primaryHubResourceGroup,
     module.nsg01,
-    azurerm_route_table.udr01
+    azurerm_route.udr01Route01,
+    azurerm_route.udr01Route02
   ]
   source              = "Azure/avm-res-network-virtualnetwork/azurerm"
   version             = "0.1.4"
