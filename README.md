@@ -6,6 +6,12 @@ Enterprise Scale LZ Connectivity Hubs Example
 
 Conceptual diagram:
 
+
+<div align="center">
+  <img src="https://github.com/ptsouk/terraform-ptn-hubs/blob/main/terraform-ptn-hubs.jpg?raw=true"
+  width="600" height="300"/>
+</div>
+
 ## AZ CLI
 
 ```bash
