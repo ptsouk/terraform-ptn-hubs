@@ -62,7 +62,7 @@ resource "azurerm_route_table" "udr01" {
   name                          = module.settings.UDRs.udr_names.udr01_name
   location                      = module.settings.default.primary_location
   disable_bgp_route_propagation = false
-  tags = module.settings.default_tags
+  tags                          = module.settings.default_tags
 }
 
 resource "azurerm_route" "udr01Route01" {
@@ -99,9 +99,7 @@ module "primaryHubVnet" {
   }
   depends_on = [
     azurerm_resource_group.primaryHubResourceGroup,
-    module.nsg01,
-    azurerm_route.udr01Route01,
-    azurerm_route.udr01Route02
+    module.nsg01
   ]
   source              = "Azure/avm-res-network-virtualnetwork/azurerm"
   version             = "0.1.4"
@@ -137,6 +135,17 @@ module "secondaryHubVnet" {
   }
   virtual_network_address_space = module.settings.HubVnets.secondaryHubVnet.address_space
   tags                          = module.settings.default_tags
+}
+
+resource "azurerm_subnet_route_table_association" "subnet_route_table_association_01" {
+  provider = azurerm.subscription_id_connectivity1
+  depends_on = [
+    module.primaryHubVnet,
+    azurerm_route.udr01Route01,
+    azurerm_route.udr01Route02
+  ]
+  subnet_id      = module.primaryHubVnet.subnets.subnet01.id
+  route_table_id = azurerm_route_table.udr01.id
 }
 
 resource "azurerm_local_network_gateway" "primaryVpnlGW" {
