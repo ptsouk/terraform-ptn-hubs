@@ -102,17 +102,17 @@ module "primaryHubVnet" {
     module.nsg01
   ]
   source              = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version             = "0.1.4"
+  version             = "0.2.3"
   enable_telemetry    = var.enable_telemetry
   name                = module.settings.HubVnets.primaryHubVnet.name
   resource_group_name = azurerm_resource_group.primaryHubResourceGroup.name
   location            = module.settings.default.primary_location
   subnets             = module.settings.HubVnets.primaryHubVnet.subnets
-  virtual_network_dns_servers = {
+  dns_servers = {
     dns_servers = module.settings.HubVnets.primaryHubVnet.dns_servers
   }
-  virtual_network_address_space = module.settings.HubVnets.primaryHubVnet.address_space
-  tags                          = module.settings.default_tags
+  address_space = module.settings.HubVnets.primaryHubVnet.address_space
+  tags          = module.settings.default_tags
 }
 # deploy hub 2
 module "secondaryHubVnet" {
@@ -124,17 +124,17 @@ module "secondaryHubVnet" {
     module.nsg02
   ]
   source              = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version             = "0.1.4"
+  version             = "0.2.3"
   enable_telemetry    = var.enable_telemetry
   name                = module.settings.HubVnets.secondaryHubVnet.name
   resource_group_name = azurerm_resource_group.secondaryHubResourceGroup.name
   location            = module.settings.default.secondary_location
   subnets             = module.settings.HubVnets.secondaryHubVnet.subnets
-  virtual_network_dns_servers = {
+  dns_servers = {
     dns_servers = module.settings.HubVnets.secondaryHubVnet.dns_servers
   }
-  virtual_network_address_space = module.settings.HubVnets.secondaryHubVnet.address_space
-  tags                          = module.settings.default_tags
+  address_space = module.settings.HubVnets.secondaryHubVnet.address_space
+  tags          = module.settings.default_tags
 }
 
 resource "azurerm_subnet_route_table_association" "subnet_route_table_association_01" {
@@ -144,7 +144,7 @@ resource "azurerm_subnet_route_table_association" "subnet_route_table_associatio
     azurerm_route.udr01Route01,
     azurerm_route.udr01Route02
   ]
-  subnet_id      = module.primaryHubVnet.subnets.subnet01.id
+  subnet_id      = module.primaryHubVnet.subnets.subnet01.resource_id
   route_table_id = azurerm_route_table.udr01.id
 }
 
@@ -258,14 +258,14 @@ resource "azurerm_virtual_network_gateway" "primaryVpnGW" {
     name                          = module.settings.HubVnets.primaryHubNetworkResources.primaryVpnGW.ip_configuration_1_name
     public_ip_address_id          = module.primaryVpnGW_pip01.public_ip_id
     private_ip_address_allocation = "Dynamic"
-    subnet_id                     = module.primaryHubVnet.subnets.GatewaySubnet.id
+    subnet_id                     = module.primaryHubVnet.subnets.GatewaySubnet.resource_id
   }
 
   ip_configuration {
     name                          = module.settings.HubVnets.primaryHubNetworkResources.primaryVpnGW.ip_configuration_2_name
     public_ip_address_id          = module.primaryVpnGW_pip02.public_ip_id
     private_ip_address_allocation = "Dynamic"
-    subnet_id                     = module.primaryHubVnet.subnets.GatewaySubnet.id
+    subnet_id                     = module.primaryHubVnet.subnets.GatewaySubnet.resource_id
   }
 
   bgp_settings {
@@ -313,7 +313,7 @@ resource "azurerm_virtual_network_gateway" "primaryERGW" {
     name                          = module.settings.HubVnets.primaryHubNetworkResources.primaryERGW.ip_configuration_1_name
     public_ip_address_id          = module.primaryERGW_pip01.public_ip_id
     private_ip_address_allocation = "Dynamic"
-    subnet_id                     = module.primaryHubVnet.subnets.GatewaySubnet.id
+    subnet_id                     = module.primaryHubVnet.subnets.GatewaySubnet.resource_id
   }
   tags = module.settings.default_tags
 }
@@ -329,8 +329,8 @@ resource "azurerm_route_server" "primaryARS" {
   location                         = module.settings.default.primary_location
   sku                              = "Standard"
   public_ip_address_id             = module.primaryARS_pip01.public_ip_id
-  subnet_id                        = module.primaryHubVnet.subnets.RouteServerSubnet.id
-  branch_to_branch_traffic_enabled = true
+  subnet_id                        = module.primaryHubVnet.subnets.RouteServerSubnet.resource_id
+  branch_to_branch_traffic_enabled = false
 }
 
 # set to conditional if asn and ip != null
@@ -353,9 +353,9 @@ resource "azurerm_virtual_network_peering" "hub1TOhub2_peering" {
     module.secondaryHubVnet
   ]
   name                      = module.settings.HubVnets.hub1TOhub2_peering.name
-  resource_group_name       = module.primaryHubVnet.vnet_resource.resource_group_name
-  virtual_network_name      = module.primaryHubVnet.vnet_resource.name
-  remote_virtual_network_id = module.secondaryHubVnet.virtual_network_id
+  resource_group_name       = module.settings.default.primaryHubResourceGroup_name
+  virtual_network_name      = module.primaryHubVnet.name
+  remote_virtual_network_id = module.secondaryHubVnet.resource_id
   allow_gateway_transit     = true
 }
 
@@ -368,8 +368,8 @@ resource "azurerm_virtual_network_peering" "hub2TOhub1_peering" {
     resource.azurerm_virtual_network_peering.hub1TOhub2_peering
   ]
   name                      = module.settings.HubVnets.hub2TOhub1_peering.name
-  resource_group_name       = module.secondaryHubVnet.vnet_resource.resource_group_name
-  virtual_network_name      = module.secondaryHubVnet.vnet_resource.name
-  remote_virtual_network_id = module.primaryHubVnet.virtual_network_id
+  resource_group_name       = module.settings.default.secondaryHubResourceGroup_name
+  virtual_network_name      = module.secondaryHubVnet.name
+  remote_virtual_network_id = module.primaryHubVnet.resource_id
   use_remote_gateways       = false
 }

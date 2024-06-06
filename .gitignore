@@ -1,5 +1,6 @@
 # Local .terraform directories
 **/.terraform/*
+**/settings_ab_dev/*
 
 # .tfstate files
 *.tfstate
