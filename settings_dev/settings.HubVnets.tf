@@ -62,14 +62,23 @@ locals {
       "subnet01" = {
         name             = "subnet01"
         address_prefixes = ["10.1.0.0/24"]
+        network_security_group = {
+          id = "/subscriptions/${local.subscription_id_connectivity2}/resourceGroups/${local.secondaryHubResourceGroup_name}/providers/Microsoft.Network/networkSecurityGroups/${local.nsg_names.nsg02_name}"
+        }
       },
       "subnet02" = {
         name             = "subnet02"
         address_prefixes = ["10.1.1.0/24"]
+        network_security_group = {
+          id = "/subscriptions/${local.subscription_id_connectivity2}/resourceGroups/${local.secondaryHubResourceGroup_name}/providers/Microsoft.Network/networkSecurityGroups/${local.nsg_names.nsg02_name}"
+        }
       },
       "subnet03" = {
         name             = "subnet03"
         address_prefixes = ["10.1.2.0/24"]
+        network_security_group = {
+          id = "/subscriptions/${local.subscription_id_connectivity2}/resourceGroups/${local.secondaryHubResourceGroup_name}/providers/Microsoft.Network/networkSecurityGroups/${local.nsg_names.nsg02_name}"
+        }
       }
     }
   }
