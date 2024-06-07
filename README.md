@@ -9,7 +9,7 @@ Conceptual diagram:
 
 <div align="center">
   <img src="https://github.com/ptsouk/terraform-ptn-hubs/blob/main/terraform-ptn-hubs.jpg?raw=true"
-  width="1024" height="768"/>
+  width="800" height="800"/>
 </div>
 
 ## AZ CLI
