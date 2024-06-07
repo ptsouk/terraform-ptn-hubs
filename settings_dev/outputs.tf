@@ -12,6 +12,14 @@ output "default" {
   }
 }
 
+output "keyvault" {
+  description = "Keyvault and Secret Names."
+  value = {
+    Name          = local.keyvault_name
+    resourceGroup = local.keyvault_resourceGroup
+    secrets       = local.secrets
+  }
+}
 output "default_tags" {
   description = "Default tags."
   value       = local.default_tags

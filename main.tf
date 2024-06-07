@@ -3,6 +3,18 @@ module "settings" {
   source = "./settings_dev"
 }
 
+data "azurerm_key_vault" "keyvault" {
+  provider            = azurerm.subscription_id_management
+  name                = module.settings.keyvault.Name
+  resource_group_name = module.settings.keyvault.resourceGroup
+}
+
+data "azurerm_key_vault_secret" "primaryVpnConnection_shared_key" {
+  provider     = azurerm.subscription_id_management
+  name         = module.settings.keyvault.secrets.primaryVpnConnection_shared_key_SecretName
+  key_vault_id = data.azurerm_key_vault.keyvault.id
+}
+
 # deploy primary hub resource group in the specified location.
 resource "azurerm_resource_group" "primaryHubResourceGroup" {
   provider = azurerm.subscription_id_connectivity1
@@ -65,41 +77,14 @@ resource "azurerm_route_table" "udr01" {
   tags                          = module.settings.default_tags
 }
 
-resource "azurerm_route" "udr01Route01" {
-  provider = azurerm.subscription_id_connectivity1
-  depends_on = [
-    azurerm_resource_group.primaryHubResourceGroup,
-    azurerm_route_table.udr01
-  ]
-  name                = module.settings.UDRs.routes.udr01Routes.udr01Route01.name
-  resource_group_name = azurerm_resource_group.primaryHubResourceGroup.name
-  route_table_name    = module.settings.UDRs.udr_names.udr01_name
-  address_prefix      = module.settings.UDRs.routes.udr01Routes.udr01Route01.address_prefix
-  next_hop_type       = module.settings.UDRs.routes.udr01Routes.udr01Route01.next_hop_type
-}
-
-resource "azurerm_route" "udr01Route02" {
-  provider = azurerm.subscription_id_connectivity1
-  depends_on = [
-    azurerm_resource_group.primaryHubResourceGroup,
-    azurerm_route_table.udr01
-  ]
-  name                   = module.settings.UDRs.routes.udr01Routes.udr01Route02.name
-  resource_group_name    = azurerm_resource_group.primaryHubResourceGroup.name
-  route_table_name       = module.settings.UDRs.udr_names.udr01_name
-  address_prefix         = module.settings.UDRs.routes.udr01Routes.udr01Route02.address_prefix
-  next_hop_type          = module.settings.UDRs.routes.udr01Routes.udr01Route02.next_hop_type
-  next_hop_in_ip_address = module.settings.UDRs.routes.udr01Routes.udr01Route02.next_hop_in_ip_address
-}
-
 # deploy hub 1
 module "primaryHubVnet" {
   providers = {
     azurerm = azurerm.subscription_id_connectivity1
   }
   depends_on = [
-    azurerm_resource_group.primaryHubResourceGroup,
-    module.nsg01
+    module.nsg01,
+    azurerm_route_table.udr01
   ]
   source              = "Azure/avm-res-network-virtualnetwork/azurerm"
   version             = "0.2.3"
@@ -114,6 +99,32 @@ module "primaryHubVnet" {
   address_space = module.settings.HubVnets.primaryHubVnet.address_space
   tags          = module.settings.default_tags
 }
+
+resource "azurerm_route" "udr01Route01" {
+  provider = azurerm.subscription_id_connectivity1
+  depends_on = [
+    module.primaryHubVnet
+  ]
+  name                = module.settings.UDRs.routes.udr01Routes.udr01Route01.name
+  resource_group_name = azurerm_resource_group.primaryHubResourceGroup.name
+  route_table_name    = module.settings.UDRs.udr_names.udr01_name
+  address_prefix      = module.settings.UDRs.routes.udr01Routes.udr01Route01.address_prefix
+  next_hop_type       = module.settings.UDRs.routes.udr01Routes.udr01Route01.next_hop_type
+}
+
+resource "azurerm_route" "udr01Route02" {
+  provider = azurerm.subscription_id_connectivity1
+  depends_on = [
+    module.primaryHubVnet
+  ]
+  name                   = module.settings.UDRs.routes.udr01Routes.udr01Route02.name
+  resource_group_name    = azurerm_resource_group.primaryHubResourceGroup.name
+  route_table_name       = module.settings.UDRs.udr_names.udr01_name
+  address_prefix         = module.settings.UDRs.routes.udr01Routes.udr01Route02.address_prefix
+  next_hop_type          = module.settings.UDRs.routes.udr01Routes.udr01Route02.next_hop_type
+  next_hop_in_ip_address = module.settings.UDRs.routes.udr01Routes.udr01Route02.next_hop_in_ip_address
+}
+
 # deploy hub 2
 module "secondaryHubVnet" {
   providers = {
@@ -135,17 +146,6 @@ module "secondaryHubVnet" {
   }
   address_space = module.settings.HubVnets.secondaryHubVnet.address_space
   tags          = module.settings.default_tags
-}
-
-resource "azurerm_subnet_route_table_association" "subnet_route_table_association_01" {
-  provider = azurerm.subscription_id_connectivity1
-  depends_on = [
-    module.primaryHubVnet,
-    azurerm_route.udr01Route01,
-    azurerm_route.udr01Route02
-  ]
-  subnet_id      = module.primaryHubVnet.subnets.subnet01.resource_id
-  route_table_id = azurerm_route_table.udr01.id
 }
 
 resource "azurerm_local_network_gateway" "primaryVpnlGW" {
@@ -288,7 +288,7 @@ resource "azurerm_virtual_network_gateway_connection" "primaryVpnConnection" {
   enable_bgp                 = true
   virtual_network_gateway_id = azurerm_virtual_network_gateway.primaryVpnGW.id
   local_network_gateway_id   = azurerm_local_network_gateway.primaryVpnlGW.id
-  shared_key                 = module.settings.HubVnets.primaryHubNetworkResources.primaryVpnConnection.shared_key
+  shared_key                 = data.azurerm_key_vault_secret.primaryVpnConnection_shared_key.value
   tags                       = module.settings.default_tags
 }
 
